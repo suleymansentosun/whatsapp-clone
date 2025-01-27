@@ -39,4 +39,12 @@ export class UsersService {
     };
     return this.userModel.findByIdAndUpdate(id, updates, { new: true }).exec();
   }
+
+  async updatePassword(id: string, hashedPassword: string): Promise<User> {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { password: hashedPassword },
+      { new: true }
+    ).exec();
+  }
 } 
