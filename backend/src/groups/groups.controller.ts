@@ -1,15 +1,25 @@
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { Group } from './schemas/group.schema';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('groups')
+@UseGuards(JwtAuthGuard) // Protect all routes in this controller
 export class GroupsController {
     constructor(private readonly groupsService: GroupsService) {}
 
     @Post()
-    async create(@Body() createGroupDto: CreateGroupDto): Promise<Group> {
-        return this.groupsService.create(createGroupDto);
+    async create(
+        @Request() req,
+        @Body() createGroupDto: CreateGroupDto
+    ): Promise<Group> {
+        // Add the authenticated user as the creator
+        return this.groupsService.create({
+            ...createGroupDto,
+            createdBy: req.user._id,
+            participants: [...createGroupDto.participants, req.user._id]
+        });
     }
 
     @Get()

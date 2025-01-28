@@ -1,15 +1,24 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { Message } from './schemas/message.schema';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('messages')
+@UseGuards(JwtAuthGuard) // Protect all routes in this controller
 export class MessagesController {
     constructor(private readonly messagesService: MessagesService) {}
 
     @Post()
-    async create(@Body() createMessageDto: CreateMessageDto): Promise<Message> {
-        return this.messagesService.create(createMessageDto);
+    async create(
+        @Request() req,
+        @Body() createMessageDto: CreateMessageDto
+    ): Promise<Message> {
+        // Add the authenticated user as the sender
+        return this.messagesService.create({
+            ...createMessageDto,
+            sender: req.user._id
+        });
     }
 
     @Get('user/:userId')
